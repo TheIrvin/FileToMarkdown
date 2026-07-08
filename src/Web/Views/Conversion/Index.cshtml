@@ -1,0 +1,41 @@
+@model MarkItDownWeb.Web.Models.ConversionViewModel
+@{
+    ViewData["Title"] = "MarkItDown Web";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-9">
+            <h3 class="mb-3">MarkItDown Web</h3>
+
+            <div class="card p-3 mb-3">
+                <input type="file" id="fileInput" class="form-control mb-2"
+                       accept=".pdf,.docx,.pptx,.xlsx,.html,.csv" />
+                <button id="btnConvert" class="btn btn-primary">Convert</button>
+                <span id="statusText" class="ms-2 text-muted"></span>
+            </div>
+
+            <div class="card p-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <h5>Generated Markdown</h5>
+                    <div>
+                        <button id="btnCopy" class="btn btn-sm btn-outline-secondary">Copy</button>
+                        <button id="btnDownload" class="btn btn-sm btn-outline-secondary">Download</button>
+                        <button id="btnClear" class="btn btn-sm btn-outline-danger">Clear</button>
+                    </div>
+                </div>
+                <pre id="markdownOutput" class="border rounded p-3" style="min-height:300px; white-space:pre-wrap;"></pre>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <h5>History</h5>
+            <input type="text" id="searchHistory" class="form-control mb-2" placeholder="Search..." />
+            <ul id="historyList" class="list-group"></ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/conversion.js"></script>
+}
