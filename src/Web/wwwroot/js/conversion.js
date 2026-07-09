@@ -8,14 +8,14 @@ const searchHistory = document.getElementById('searchHistory');
 btnConvert.addEventListener('click', async () => {
     const file = fileInput.files[0];
     if (!file) {
-        statusText.textContent = 'Select a file first.';
+        statusText.textContent = 'Selecciona un archivo primero.';
         return;
     }
 
     const formData = new FormData();
     formData.append('file', file);
 
-    statusText.textContent = 'Converting...';
+    statusText.textContent = 'Convirtiendo...';
     btnConvert.disabled = true;
 
     try {
@@ -24,13 +24,13 @@ btnConvert.addEventListener('click', async () => {
 
         if (result.success) {
             markdownOutput.textContent = result.markdown;
-            statusText.textContent = `Done in ${result.conversionTimeSeconds.toFixed(2)}s`;
+            statusText.textContent = `Completado en ${result.conversionTimeSeconds.toFixed(2)}s`;
             loadHistory();
         } else {
-            statusText.textContent = result.errorMessage || 'Conversion error.';
+            statusText.textContent = result.errorMessage || 'Error al convertir.';
         }
     } catch (err) {
-        statusText.textContent = 'Network error.';
+        statusText.textContent = 'Error de red.';
     } finally {
         btnConvert.disabled = false;
     }
@@ -45,7 +45,7 @@ document.getElementById('btnDownload').addEventListener('click', () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'result.md';
+    a.download = 'resultado.md';
     a.click();
     URL.revokeObjectURL(url);
 });
