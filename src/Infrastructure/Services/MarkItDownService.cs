@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using MarkItDownWeb.Application.Interfaces;
+using MarkItDownWeb.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 
 namespace MarkItDownWeb.Infrastructure.Services;
@@ -18,6 +19,10 @@ public class MarkItDownService : IMarkItDownService
     {
         if (!File.Exists(absoluteFilePath))
             throw new FileNotFoundException("File not found", absoluteFilePath);
+
+        var extension = Path.GetExtension(absoluteFilePath);
+        if (!FileSignatureValidator.IsValid(absoluteFilePath, extension))
+            throw new InvalidOperationException("The file contents do not match its extension.");
 
         var psi = new ProcessStartInfo
         {
@@ -41,7 +46,17 @@ public class MarkItDownService : IMarkItDownService
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
-        await process.WaitForExitAsync(ct);
+        try
+        {
+            await process.WaitForExitAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+                process.Kill(entireProcessTree: true);
+
+            throw;
+        }
 
         if (process.ExitCode != 0)
             throw new InvalidOperationException($"MarkItDown failed: {stderr}");
