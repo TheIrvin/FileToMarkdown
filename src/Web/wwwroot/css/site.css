@@ -19,6 +19,94 @@ html {
 
 body {
   margin-bottom: 60px;
+  background: #f5f7fa;
+  color: #17212f;
+}
+
+.navbar {
+  background: #fff;
+}
+
+.conversion-shell {
+  max-width: 1440px;
+  margin: 2.25rem auto;
+}
+
+.page-heading h1 {
+  max-width: 760px;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.eyebrow {
+  color: #64748b;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+
+.app-card {
+  height: 100%;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgb(15 23 42 / 4%);
+}
+
+.status-text {
+  font-size: .9rem;
+}
+
+.markdown-output {
+  min-height: 360px;
+  max-height: 65vh;
+  overflow: auto;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #243247;
+  font: .875rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.history-list {
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.history-entry {
+  display: grid;
+  width: 100%;
+  gap: .25rem;
+  padding: .4rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.history-entry:not(:disabled):hover .history-file-name {
+  color: #0d6efd;
+}
+
+.history-entry:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.history-file-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-date {
+  color: #64748b;
+  font-size: .75rem;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

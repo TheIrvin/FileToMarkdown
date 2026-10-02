@@ -15,16 +15,23 @@ public class ConversionController : Controller
     public IActionResult Index() => View(new ConversionViewModel());
 
     [HttpPost]
-    [RequestSizeLimit(100_000_000)]
-    public async Task<IActionResult> Convert(IFormFile file, CancellationToken ct)
+    [RequestSizeLimit(105_906_176)]
+    public async Task<IActionResult> Convert(IFormFile? file, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { error = "No file was received." });
 
-        await using var stream = file.OpenReadStream();
-        var result = await _conversionService.ConvertAsync(stream, file.FileName, file.Length, ct);
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var result = await _conversionService.ConvertAsync(stream, file.FileName, file.Length, ct);
 
-        return Json(result);
+            return Json(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet]
@@ -37,8 +44,15 @@ public class ConversionController : Controller
     [HttpGet]
     public async Task<IActionResult> Item(Guid id, CancellationToken ct)
     {
-        var result = await _conversionService.GetHistoryItemAsync(id, ct);
-        return Json(result);
+        try
+        {
+            var result = await _conversionService.GetHistoryItemAsync(id, ct);
+            return Json(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { error = "Conversion not found." });
+        }
     }
 
     [HttpPost]

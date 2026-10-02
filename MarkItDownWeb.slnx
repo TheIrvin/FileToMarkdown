@@ -12,4 +12,7 @@
   <Folder Name="/src/Web/">
     <Project Path="src/Web/MarkItDownWeb.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MarkItDownWeb.Tests/MarkItDownWeb.Tests.csproj" />
+  </Folder>
 </Solution>
