@@ -2,6 +2,10 @@
 
 Aplicación web local para convertir documentos a Markdown. Selecciona un archivo, revisa el resultado en el navegador y descarga un `.md` con el nombre del documento original.
 
+## Captura
+
+![Conversión de un documento y su vista previa Markdown con historial local](docs/screenshots/local-conversion-flow.png)
+
 ## Funciones
 
 - Interfaz web responsive con vista previa, copia y descarga del Markdown.
