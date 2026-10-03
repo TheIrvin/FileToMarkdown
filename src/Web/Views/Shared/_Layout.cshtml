@@ -1,30 +1,48 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f7f6f3" />
     <title>@ViewData["Title"] - MarkItDown</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MarkItDownWeb.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Conversion" asp-action="Index">MarkItDown</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+<body class="app-body">
+    <header class="app-header">
+        <nav class="app-nav" aria-label="Navegación principal">
+            <a class="brand-lockup" asp-area="" asp-controller="Conversion" asp-action="Index" aria-label="MarkItDown, inicio">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" fill="none">
+                        <path d="M7.5 4.5h11l6 6v17h-17v-23Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                        <path d="M18.5 4.8v6h5.8M11 16h10M11 20h7M11 24h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                </span>
+                <span class="brand-name">MarkItDown</span>
+                <span class="brand-local">LOCAL</span>
+            </a>
+            <div class="nav-context">
+                <span class="nav-context-label">ESPACIO DE TRABAJO</span>
+                <span class="nav-divider" aria-hidden="true"></span>
+                <span class="nav-context-value">Conversor de documentos</span>
             </div>
+            <span class="local-badge">
+                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+                    <rect x="3.5" y="8.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M6.5 8.5V6a3.5 3.5 0 0 1 7 0v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    <circle cx="10" cy="12.5" r="1" fill="currentColor" />
+                </svg>
+                Tus archivos no salen de este equipo
+            </span>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    <div class="app-frame">
+        @RenderBody()
+        <footer class="app-footer">
+            <span><span class="footer-mark" aria-hidden="true">●</span> Conversión privada, en tu dispositivo.</span>
+            <span>PDF · DOCX · PPTX · XLSX · HTML · CSV</span>
+        </footer>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

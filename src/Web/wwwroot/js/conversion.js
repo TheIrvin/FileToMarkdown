@@ -45,7 +45,13 @@ function updateLibraryState(itemCount, search = '') {
     workspaceLayout.hidden = isFirstRun;
     libraryToolbar.hidden = isFirstRun;
     supportedFormats.hidden = isFirstRun;
-    pageTitle.textContent = isFirstRun ? 'Convierte documentos a Markdown' : 'Consulta tus documentos';
+    const [titleLead, titleAccent] = isFirstRun
+        ? ['Convierte y consulta', 'sin salir de tu equipo.']
+        : ['Encuentra en tus archivos', 'lo que buscas.'];
+    const titleBreak = document.createElement('br');
+    const accent = document.createElement('span');
+    accent.textContent = titleAccent;
+    pageTitle.replaceChildren(titleLead, titleBreak, accent);
     pageDescription.textContent = isFirstRun
         ? 'Convierte tus archivos y guarda los resultados localmente en este equipo.'
         : 'Busca contenido y vuelve a tus archivos desde un espacio privado en este equipo.';
