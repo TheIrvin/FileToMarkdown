@@ -37,19 +37,31 @@ public class LocalLibrarySchemaTests
                 INSERT INTO "Conversions" VALUES
                 ({id}, 'legacy.csv', 'Csv', '', 'legacy.md', 42, '2026-10-03 00:00:00', 0.1, 'Completed', NULL);
                 """);
-
-            LocalLibrarySchema.EnsureCreated(legacy);
-
-            var preserved = await legacy.Conversions.SingleAsync();
-            Assert.Equal(id, preserved.Id);
-            Assert.Equal("legacy.csv", preserved.FileName);
+            await legacy.Database.ExecuteSqlRawAsync("""
+                CREATE TABLE "DocumentChunks" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_DocumentChunks" PRIMARY KEY,
+                    "ConversionId" TEXT NOT NULL,
+                    "Ordinal" INTEGER NOT NULL,
+                    "Section" TEXT NOT NULL,
+                    "Content" TEXT NOT NULL,
+                    CONSTRAINT "FK_DocumentChunks_Conversions_ConversionId"
+                        FOREIGN KEY ("ConversionId") REFERENCES "Conversions" ("Id") ON DELETE CASCADE
+                );
+                """);
             var chunkId = Guid.NewGuid();
             await legacy.Database.ExecuteSqlInterpolatedAsync($"""
                 INSERT INTO "DocumentChunks" VALUES
                 ({chunkId}, {id}, 0, 'Old document', 'Preserved searchable text');
                 """);
 
+            LocalLibrarySchema.EnsureCreated(legacy);
+
+            var preserved = await legacy.Conversions.SingleAsync();
+            Assert.Equal(id, preserved.Id);
+            Assert.Equal("legacy.csv", preserved.FileName);
             IConversionRepository repository = new ConversionRepository(legacy);
+            await repository.BackfillSearchIndexesAsync();
+            await repository.SaveChangesAsync();
             var hits = await repository.SearchContentAsync(["searchable"], 5);
             Assert.Equal(id, Assert.Single(hits).ConversionId);
 

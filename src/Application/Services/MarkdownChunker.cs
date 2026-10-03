@@ -13,7 +13,7 @@ internal static partial class MarkdownChunker
     [GeneratedRegex(@"(?:<!--\s*PageNumber\s*=\s*""?(\d+)""?\s*-->|^\s*#{1,6}\s+(?:Page|Página)\s+(\d+)\s*$)", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex PageRegex();
 
-    public static IReadOnlyList<DocumentChunk> Create(Guid conversionId, string markdown)
+    public static IReadOnlyList<DocumentChunk> Create(Guid conversionId, string markdown, string fileName)
     {
         var chunks = new List<DocumentChunk>();
         var headings = new List<(int Level, string Text)>();
@@ -37,7 +37,8 @@ internal static partial class MarkdownChunker
                     ConversionId = conversionId,
                     Ordinal = ordinal++,
                     Section = section.Length <= 500 ? section : section[..500],
-                    Content = part
+                    Content = part,
+                    SearchIndex = SearchTextNormalizer.CreateIndex(fileName, part)
                 });
             }
         }

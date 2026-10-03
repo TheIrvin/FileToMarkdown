@@ -1,6 +1,13 @@
 const fileInput = document.getElementById('fileInput');
 const btnImport = document.getElementById('btnImport');
-const btnEmptyImport = document.getElementById('btnEmptyImport');
+const btnFirstRunImport = document.getElementById('btnFirstRunImport');
+const firstRunPanel = document.getElementById('firstRunPanel');
+const firstRunStatus = document.getElementById('firstRunStatus');
+const workspaceLayout = document.getElementById('workspaceLayout');
+const libraryToolbar = document.getElementById('libraryToolbar');
+const supportedFormats = document.getElementById('supportedFormats');
+const pageTitle = document.getElementById('pageTitle');
+const pageDescription = document.getElementById('pageDescription');
 const statusText = document.getElementById('statusText');
 const importProgress = document.getElementById('importProgress');
 const importResults = document.getElementById('importResults');
@@ -27,8 +34,25 @@ const answerPanel = document.getElementById('answerPanel');
 
 let currentFileName = '';
 let currentConversionId = null;
+let historyRequestId = 0;
+let librarySearchRequestId = 0;
+let detailRequestId = 0;
+let isImporting = false;
+
+function updateLibraryState(itemCount, search = '') {
+    const isFirstRun = itemCount === 0 && !search.trim();
+    firstRunPanel.hidden = !isFirstRun;
+    workspaceLayout.hidden = isFirstRun;
+    libraryToolbar.hidden = isFirstRun;
+    supportedFormats.hidden = isFirstRun;
+    pageTitle.textContent = isFirstRun ? 'Convierte documentos a Markdown' : 'Consulta tus documentos';
+    pageDescription.textContent = isFirstRun
+        ? 'Convierte tus archivos y guarda los resultados localmente en este equipo.'
+        : 'Busca contenido y vuelve a tus archivos desde un espacio privado en este equipo.';
+}
 
 function setMarkdown(markdown, fileName = '', conversionId = null) {
+    detailRequestId++;
     currentFileName = fileName;
     currentConversionId = conversionId;
     markdownOutput.textContent = markdown || '';
@@ -100,9 +124,11 @@ function createHistoryRow(item) {
 }
 
 async function loadHistory(search = '') {
+    const requestId = ++historyRequestId;
     try {
         const response = await fetch(`/Conversion/History?search=${encodeURIComponent(search)}`);
         const items = await readResponse(response);
+        if (requestId !== historyRequestId) return;
         historyList.replaceChildren(...items.map(createHistoryRow));
         documentCount.textContent = items.length;
         documentTableHead.hidden = items.length === 0;
@@ -111,23 +137,27 @@ async function loadHistory(search = '') {
         historyEmptyText.textContent = search
             ? 'No hay archivos con ese nombre. Prueba otra palabra o borra la búsqueda; las coincidencias de contenido aparecen abajo.'
             : 'Importa un documento para convertirlo, buscar su contenido y consultarlo aquí.';
-        btnEmptyImport.hidden = Boolean(search);
+        updateLibraryState(items.length, search);
     } catch {
+        if (requestId !== historyRequestId) return;
+        updateLibraryState(1, search);
         historyEmpty.hidden = false;
         historyEmptyTitle.textContent = 'No se pudo cargar la biblioteca';
         historyEmptyText.textContent = 'Comprueba que la aplicación siga abierta e inténtalo de nuevo.';
-        btnEmptyImport.hidden = true;
     }
 }
 
 async function openHistoryItem(id) {
+    const requestId = ++detailRequestId;
     statusText.textContent = 'Abriendo documento...';
     try {
         const response = await fetch(`/Conversion/Item?id=${encodeURIComponent(id)}`);
         const result = await readResponse(response);
+        if (requestId !== detailRequestId) return;
         setMarkdown(result.markdown, result.fileName, result.conversionId);
         statusText.textContent = 'Vista previa actualizada.';
     } catch (error) {
+        if (requestId !== detailRequestId) return;
         statusText.textContent = error.message;
     }
 }
@@ -161,6 +191,7 @@ function renderEvidence(target, hit) {
 }
 
 async function loadLibraryResults(query = '') {
+    const requestId = ++librarySearchRequestId;
     if (!query.trim()) {
         libraryResultsPanel.hidden = true;
         libraryResults.replaceChildren();
@@ -170,11 +201,13 @@ async function loadLibraryResults(query = '') {
     try {
         const response = await fetch(`/Conversion/Search?query=${encodeURIComponent(query)}`);
         const items = await readResponse(response);
+        if (requestId !== librarySearchRequestId) return;
         libraryResults.replaceChildren();
         items.forEach(hit => renderEvidence(libraryResults, hit));
         librarySearchEmpty.hidden = items.length > 0;
         librarySearchEmpty.textContent = 'No encontré fragmentos para esta búsqueda.';
     } catch {
+        if (requestId !== librarySearchRequestId) return;
         librarySearchEmpty.hidden = false;
         librarySearchEmpty.textContent = 'No se pudo buscar en la biblioteca.';
     }
@@ -182,16 +215,27 @@ async function loadLibraryResults(query = '') {
 
 async function importFiles(files) {
     if (files.length === 0) return;
+    if (isImporting) {
+        statusText.textContent = 'Espera a que termine el lote actual antes de importar más archivos.';
+        firstRunStatus.textContent = statusText.textContent;
+        firstRunStatus.hidden = false;
+        return;
+    }
     if (files.length > 10) {
         statusText.textContent = 'Selecciona hasta 10 archivos por lote.';
+        firstRunStatus.textContent = statusText.textContent;
+        firstRunStatus.hidden = false;
         return;
     }
 
+    isImporting = true;
     importProgress.hidden = false;
     importResults.replaceChildren();
     btnImport.disabled = true;
-    btnEmptyImport.disabled = true;
+    btnFirstRunImport.disabled = true;
     let lastResult = null;
+    firstRunStatus.textContent = `Importando ${files.length} ${files.length === 1 ? 'archivo' : 'archivos'}...`;
+    firstRunStatus.hidden = false;
 
     for (const file of files) {
         const entry = document.createElement('li');
@@ -221,14 +265,43 @@ async function importFiles(files) {
         statusText.textContent = 'No se pudo importar ningún archivo.';
     }
     await Promise.all([loadHistory(librarySearch.value), loadLibraryResults(librarySearch.value)]);
+    firstRunStatus.textContent = statusText.textContent;
+    firstRunStatus.hidden = !firstRunStatus.textContent;
     fileInput.value = '';
+    isImporting = false;
     btnImport.disabled = false;
-    btnEmptyImport.disabled = false;
+    btnFirstRunImport.disabled = false;
+    if (lastResult)
+        resultHeading.focus({ preventScroll: true });
+    else if (!firstRunPanel.hidden)
+        firstRunStatus.focus({ preventScroll: true });
+    else
+        statusText.focus({ preventScroll: true });
 }
 
 btnImport.addEventListener('click', () => fileInput.click());
-btnEmptyImport.addEventListener('click', () => fileInput.click());
+btnFirstRunImport.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => importFiles([...fileInput.files]));
+
+firstRunPanel.addEventListener('dragover', event => {
+    event.preventDefault();
+    firstRunPanel.classList.add('is-dragging');
+});
+firstRunPanel.addEventListener('dragleave', event => {
+    if (!firstRunPanel.contains(event.relatedTarget))
+        firstRunPanel.classList.remove('is-dragging');
+});
+firstRunPanel.addEventListener('drop', event => {
+    event.preventDefault();
+    firstRunPanel.classList.remove('is-dragging');
+    if (isImporting) {
+        statusText.textContent = 'Espera a que termine el lote actual antes de importar más archivos.';
+        firstRunStatus.textContent = statusText.textContent;
+        firstRunStatus.hidden = false;
+        return;
+    }
+    importFiles([...event.dataTransfer.files]);
+});
 
 btnCopy.addEventListener('click', async () => {
     try {
@@ -296,10 +369,22 @@ askForm.addEventListener('submit', async event => {
 
 let searchTimer;
 librarySearch.addEventListener('input', event => {
+    historyRequestId++;
+    librarySearchRequestId++;
+    const query = event.target.value;
+    historyList.replaceChildren();
+    documentTableHead.hidden = true;
+    historyEmpty.hidden = false;
+    historyEmptyTitle.textContent = query.trim() ? 'Buscando...' : 'Cargando biblioteca...';
+    historyEmptyText.textContent = query.trim() ? 'Actualizando coincidencias.' : 'Actualizando documentos guardados.';
+    libraryResultsPanel.hidden = !query.trim();
+    libraryResults.replaceChildren();
+    librarySearchEmpty.hidden = !query.trim();
+    librarySearchEmpty.textContent = 'Buscando fragmentos...';
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-        loadHistory(event.target.value);
-        loadLibraryResults(event.target.value);
+        loadHistory(query);
+        loadLibraryResults(query);
     }, 220);
 });
 

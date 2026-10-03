@@ -7,24 +7,38 @@
     <header class="library-heading">
         <div>
             <p class="eyebrow mb-2">FILETOMARKDOWN · BIBLIOTECA LOCAL</p>
-            <h1>Consulta tus documentos</h1>
-            <p class="text-muted mb-0">Busca contenido y vuelve a tus archivos desde un espacio privado en este equipo.</p>
+            <h1 id="pageTitle">Convierte documentos a Markdown</h1>
+            <p id="pageDescription" class="text-muted mb-0">Convierte tus archivos y guarda los resultados localmente en este equipo.</p>
         </div>
         <span class="local-badge"><span aria-hidden="true">●</span> Solo en este equipo</span>
     </header>
 
-    <section class="library-toolbar" aria-label="Buscar o importar">
+    <section id="libraryToolbar" class="library-toolbar" aria-label="Buscar o importar" hidden>
         <div class="global-search">
             <label class="visually-hidden" for="librarySearch">Buscar documentos y contenido</label>
             <span class="search-glyph" aria-hidden="true">⌕</span>
             <input type="search" id="librarySearch" class="form-control" placeholder="Buscar documentos y contenido..." />
         </div>
-        <input type="file" id="fileInput" hidden accept=".pdf,.docx,.pptx,.xlsx,.html,.csv" multiple />
+        <input type="file" id="fileInput" hidden accept=".pdf,.docx,.pptx,.xlsx,.html,.csv" multiple aria-label="Seleccionar documentos para convertir" />
         <button id="btnImport" class="btn btn-primary px-4">＋ Importar documentos</button>
     </section>
-    <p id="supportedFormats" class="form-text import-hint">PDF, Word, PowerPoint, Excel, HTML o CSV · hasta 10 archivos de 100 MiB cada uno</p>
+    <p id="supportedFormats" class="form-text import-hint" hidden>PDF, Word, PowerPoint, Excel, HTML o CSV · hasta 10 archivos de 100 MiB cada uno</p>
 
-    <div class="row g-4 library-layout">
+    <section id="firstRunPanel" class="first-run-panel" aria-labelledby="firstRunTitle">
+        <span class="first-run-icon" aria-hidden="true">⇧</span>
+        <h2 id="firstRunTitle">Empieza con un documento</h2>
+        <p>Suelta aquí hasta 10 archivos para convertirlos a Markdown y consultarlos desde este equipo.</p>
+        <button id="btnFirstRunImport" class="btn btn-primary px-4">Elegir documentos</button>
+        <p id="firstRunStatus" class="first-run-status mb-0" role="status" aria-live="polite" tabindex="-1" hidden></p>
+        <p class="first-run-hint mb-0">PDF, Word, PowerPoint, Excel, HTML o CSV · hasta 100 MiB por archivo</p>
+    </section>
+
+    <div id="importProgress" class="import-progress import-progress-global" hidden>
+        <p class="eyebrow mb-2">IMPORTACIÓN</p>
+        <ul id="importResults" class="import-results mb-0" aria-live="polite"></ul>
+    </div>
+
+    <div id="workspaceLayout" class="row g-4 library-layout" hidden>
         <section class="col-lg-7" aria-label="Documentos de la biblioteca">
             <div class="card app-card library-card">
                 <div class="card-heading">
@@ -32,12 +46,7 @@
                         <p class="eyebrow mb-1">TUS ARCHIVOS</p>
                         <h2 class="h5 mb-0">Biblioteca <span id="documentCount" class="count-pill">0</span></h2>
                     </div>
-                    <span id="statusText" class="status-text text-muted" role="status" aria-live="polite"></span>
-                </div>
-
-                <div id="importProgress" class="import-progress" hidden>
-                    <p class="eyebrow mb-2">IMPORTACIÓN</p>
-                    <ul id="importResults" class="import-results mb-0" aria-live="polite"></ul>
+                    <span id="statusText" class="status-text text-muted" role="status" aria-live="polite" tabindex="-1"></span>
                 </div>
 
                 <div class="table-responsive">
@@ -52,7 +61,6 @@
                     <span class="empty-icon" aria-hidden="true">▤</span>
                     <h3 id="historyEmptyTitle">Tu biblioteca está vacía</h3>
                     <p id="historyEmptyText">Importa un documento para convertirlo, buscar su contenido y consultarlo aquí.</p>
-                    <button id="btnEmptyImport" class="btn btn-sm btn-outline-primary">Importar documentos</button>
                 </div>
 
                 <div id="libraryResultsPanel" class="search-results-panel" hidden>
@@ -73,7 +81,7 @@
                 <div class="card-heading">
                     <div class="min-w-0">
                         <p class="eyebrow mb-1">VISTA PREVIA</p>
-                        <h2 id="resultHeading" class="h5 mb-0 text-truncate">Selecciona un documento</h2>
+                        <h2 id="resultHeading" class="h5 mb-0 text-truncate" tabindex="-1">Selecciona un documento</h2>
                     </div>
                     <div class="detail-actions">
                         <button id="btnCopy" class="btn btn-sm btn-outline-secondary" disabled>Copiar</button>

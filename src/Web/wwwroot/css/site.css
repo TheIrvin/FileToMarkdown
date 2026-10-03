@@ -107,6 +107,50 @@ body {
   color: #718096;
 }
 
+.first-run-panel {
+  display: grid;
+  min-height: 340px;
+  margin: 0 auto 1rem;
+  padding: 3rem 1.5rem;
+  place-items: center;
+  align-content: center;
+  gap: .75rem;
+  border: 2px dashed #cbd7e5;
+  border-radius: 16px;
+  background: #fff;
+  color: #65768b;
+  text-align: center;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.first-run-panel.is-dragging {
+  border-color: #0d6efd;
+  background: #f4f8ff;
+}
+
+.first-run-icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 16px;
+  background: #edf4ff;
+  color: #2366bd;
+  font-size: 2rem;
+}
+
+.first-run-panel h2 { margin: .35rem 0 0; color: #26394f; font-size: 1.25rem; font-weight: 650; }
+.first-run-panel > p:not(.first-run-hint) { max-width: 440px; margin: 0; font-size: .9rem; line-height: 1.55; }
+.first-run-panel .btn { min-height: 44px; margin-top: .25rem; }
+.first-run-hint { margin-top: .2rem; font-size: .76rem; }
+.first-run-status { max-width: 520px; color: #526781; font-size: .82rem; }
+
+#libraryToolbar[hidden], #supportedFormats[hidden], #workspaceLayout[hidden], .first-run-panel[hidden] {
+  display: none !important;
+}
+
+.import-progress-global { margin: 0 0 1rem; }
+
 .library-layout {
   align-items: flex-start;
 }
@@ -363,6 +407,8 @@ body {
   .library-toolbar { align-items: stretch; flex-direction: column; padding: .75rem; gap: .6rem; }
   .library-toolbar .btn { width: 100%; }
   .import-hint { margin: .4rem .4rem 1rem; }
+  .first-run-panel { min-height: 300px; padding: 2rem 1rem; }
+  .first-run-panel h2 { font-size: 1.1rem; }
   .library-card, .detail-card, .ask-card { padding: .95rem; }
   .card-heading { align-items: flex-start; }
   .status-text { max-width: 45%; }

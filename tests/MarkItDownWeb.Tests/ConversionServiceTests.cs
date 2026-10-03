@@ -4,6 +4,7 @@ using MarkItDownWeb.Domain.Entities;
 using MarkItDownWeb.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 using Xunit;
 
 namespace MarkItDownWeb.Tests;
@@ -133,6 +134,133 @@ public class ConversionServiceTests
         var hits = await library.SearchAsync("risk");
 
         Assert.Equal("Página 4", Assert.Single(hits).Section);
+    }
+
+    [Fact]
+    public async Task Search_ignores_case_and_diacritics_in_document_content()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var storage = new FakeFileStorageService();
+        var converter = new FakeMarkItDownService(_ => Task.FromResult("La CANCIÓN está en el CAFÉ."));
+        var conversions = new ConversionService(converter, storage, database.Repository);
+        await using var input = new MemoryStream([0x61, 0x2C, 0x62]);
+        await conversions.ConvertAsync(input, "música.csv", input.Length);
+
+        var library = new LibraryService(database.Repository, new LocalExtractiveAnswerGenerator());
+
+        Assert.Single(await library.SearchAsync("canción"));
+        Assert.Single(await library.SearchAsync("cafe"));
+        Assert.Single(await library.SearchAsync("canción".Normalize(NormalizationForm.FormD)));
+    }
+
+    [Fact]
+    public async Task Search_does_not_drop_whole_word_hits_behind_prefix_matches()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var exact = new Conversion
+        {
+            FileName = "budget.csv",
+            FileType = FileType.Csv,
+            Status = ConversionStatus.Completed,
+            CreatedAt = DateTime.UtcNow.AddDays(-1),
+            Chunks =
+            [
+                new DocumentChunk
+                {
+                    Section = "Contenido",
+                    Content = "The annual budget is approved.",
+                    SearchIndex = " the annual budget is approved "
+                }
+            ]
+        };
+        await database.Repository.AddAsync(exact);
+
+        for (var index = 0; index < 80; index++)
+        {
+            var content = $"The budgetary note {index} was updated.";
+            var similar = new Conversion
+            {
+                FileName = $"budgetary-{index}.csv",
+                FileType = FileType.Csv,
+                Status = ConversionStatus.Completed,
+                CreatedAt = DateTime.UtcNow.AddMinutes(index),
+                Chunks =
+                [
+                    new DocumentChunk
+                    {
+                        Section = "Contenido",
+                        Content = content,
+                        SearchIndex = SearchTextNormalizer.CreateIndex(content)
+                    }
+                ]
+            };
+            await database.Repository.AddAsync(similar);
+        }
+
+        await database.Repository.SaveChangesAsync();
+        var library = new LibraryService(database.Repository, new LocalExtractiveAnswerGenerator());
+
+        var hit = Assert.Single(await library.SearchAsync("budget"));
+
+        Assert.Equal("budget.csv", hit.FileName);
+        Assert.Contains("annual budget", hit.Content);
+    }
+
+    [Fact]
+    public async Task Search_ranks_older_chunks_that_match_more_query_terms()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var completeMatch = new Conversion
+        {
+            FileName = "archive.csv",
+            FileType = FileType.Csv,
+            Status = ConversionStatus.Completed,
+            CreatedAt = DateTime.UtcNow.AddDays(-1),
+            Chunks =
+            [
+                new DocumentChunk
+                {
+                    Section = "Contenido",
+                    Content = "Apollo migration completed in 2026.",
+                    SearchIndex = SearchTextNormalizer.CreateIndex("Apollo migration completed in 2026.")
+                }
+            ]
+        };
+        await database.Repository.AddAsync(completeMatch);
+
+        var terms = new[] { "apollo", "migration", "2026" };
+        for (var termIndex = 0; termIndex < terms.Length; termIndex++)
+        {
+            for (var itemIndex = 0; itemIndex < 80; itemIndex++)
+            {
+                var content = $"{terms[termIndex]} note {itemIndex}";
+                var conversion = new Conversion
+                {
+                    FileName = $"note-{termIndex}-{itemIndex}.csv",
+                    FileType = FileType.Csv,
+                    Status = ConversionStatus.Completed,
+                    CreatedAt = DateTime.UtcNow.AddMinutes(termIndex * 80 + itemIndex),
+                    Chunks =
+                    [
+                        new DocumentChunk
+                        {
+                            Section = "Contenido",
+                            Content = content,
+                            SearchIndex = SearchTextNormalizer.CreateIndex(content)
+                        }
+                    ]
+                };
+                await database.Repository.AddAsync(conversion);
+            }
+        }
+
+        await database.Repository.SaveChangesAsync();
+        var library = new LibraryService(database.Repository, new LocalExtractiveAnswerGenerator());
+
+        var first = (await library.SearchAsync("Apollo migration 2026")).First();
+
+        Assert.Equal("archive.csv", first.FileName);
+        Assert.Equal(3, first.MatchCount);
     }
 
     [Fact]

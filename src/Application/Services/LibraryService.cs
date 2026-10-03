@@ -10,7 +10,7 @@ public sealed partial class LibraryService
     private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
     {
         "a", "an", "and", "are", "as", "at", "be", "by", "do", "does", "for", "from", "how", "in", "is", "it", "of", "on", "or", "the", "to", "was", "were", "what", "when", "where", "which", "who", "why",
-        "con", "cuál", "cuáles", "cómo", "de", "del", "el", "ella", "en", "es", "esta", "este", "la", "las", "lo", "los", "más", "para", "por", "qué", "se", "sobre", "son", "un", "una", "y"
+        "con", "cuál", "cuáles", "cual", "cuales", "cómo", "como", "de", "del", "el", "ella", "en", "es", "esta", "este", "la", "las", "lo", "los", "más", "mas", "para", "por", "qué", "que", "se", "sobre", "son", "un", "una", "y"
     };
     private readonly IConversionRepository _repository;
     private readonly IAnswerGenerator _answerGenerator;
@@ -47,7 +47,8 @@ public sealed partial class LibraryService
         if (string.IsNullOrWhiteSpace(query))
             return [];
 
-        return TermRegex().Matches(query[..Math.Min(query.Length, MaxQueryLength)])
+        var normalizedQuery = SearchTextNormalizer.NormalizeTerm(query[..Math.Min(query.Length, MaxQueryLength)]);
+        return TermRegex().Matches(normalizedQuery)
             .Select(match => match.Value)
             .Where(term => !StopWords.Contains(term))
             .Distinct(StringComparer.OrdinalIgnoreCase)

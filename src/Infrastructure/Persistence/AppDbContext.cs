@@ -32,6 +32,7 @@ public class AppDbContext : DbContext
             entity.HasKey(chunk => chunk.Id);
             entity.Property(chunk => chunk.Section).IsRequired().HasMaxLength(500);
             entity.Property(chunk => chunk.Content).IsRequired().HasMaxLength(1200);
+            entity.Property(chunk => chunk.SearchIndex).IsRequired().HasMaxLength(1500);
             entity.HasIndex(chunk => new { chunk.ConversionId, chunk.Ordinal }).IsUnique();
         });
     }

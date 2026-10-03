@@ -2,11 +2,11 @@
 
 Biblioteca local para convertir documentos a Markdown, buscar su contenido y consultar fragmentos con referencias a su archivo y sección de origen.
 
-**Escritorio**
+**Primer uso en escritorio**
 
 ![Biblioteca local en escritorio](docs/screenshots/local-document-library.png)
 
-**Móvil**
+**Primer uso en móvil**
 
 ![Biblioteca local en móvil](docs/screenshots/local-document-library-mobile.png)
 
@@ -15,7 +15,7 @@ Biblioteca local para convertir documentos a Markdown, buscar su contenido y con
 - Importa hasta 10 archivos por lote; cada archivo puede ocupar hasta 100 MiB. El estado de conversión se muestra por archivo y un error no detiene los demás.
 - Convierte PDF, DOCX, PPTX, XLSX, HTML y CSV con [Microsoft MarkItDown](https://github.com/microsoft/markitdown).
 - Previsualiza, copia y descarga Markdown. El historial local permite reabrir o borrar conversiones.
-- Indexa el Markdown en fragmentos de hasta 1.200 caracteres y busca nombres de archivo y contenido en SQLite.
+- Indexa el Markdown en fragmentos de hasta 1.200 caracteres y busca nombres de archivo y contenido en SQLite, sin distinguir mayúsculas ni acentos.
 - Consulta la biblioteca con respuestas extractivas: muestra el fragmento coincidente y cita el archivo y la sección. Si no encuentra evidencia, lo indica explícitamente.
 
 La búsqueda y las consultas son locales y no necesitan claves ni conexión a un proveedor de IA. `IAnswerGenerator` permite añadir otro generador, pero esta versión solo registra el generador extractivo local y no envía documentos fuera del equipo.
@@ -46,7 +46,7 @@ Abre [http://localhost:5241](http://localhost:5241). Si prefieres usar una insta
 
 ## Uso
 
-1. Pulsa **Importar documentos** y selecciona archivos permitidos. Se procesan de uno en uno; el estado o error aparece junto al nombre del archivo.
+1. Arrastra archivos a la zona de carga o pulsa **Elegir documentos**. Se procesan de uno en uno; el estado o error aparece junto al nombre de cada archivo.
 2. Busca por nombre o contenido desde la barra superior. La lista central muestra tipo, fecha y estado.
 3. Selecciona un documento para abrir su Markdown en el panel de detalle. Desde ahí puedes copiar, descargar o borrar.
 4. Usa **Pregunta a la biblioteca** para consultar fragmentos relacionados con sus citas. Sin coincidencias, la app informa que no encontró respaldo. En móvil, el detalle queda debajo de la lista.

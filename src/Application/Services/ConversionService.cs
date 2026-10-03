@@ -50,7 +50,7 @@ public class ConversionService
 
             var markdownPath = await _fileStorageService.SaveMarkdownAsync(conversion.Id, markdown, ct);
             conversion.MarkAsCompleted(markdownPath, stopwatch.Elapsed.TotalSeconds);
-            conversion.Chunks.AddRange(MarkdownChunker.Create(conversion.Id, markdown));
+            conversion.Chunks.AddRange(MarkdownChunker.Create(conversion.Id, markdown, conversion.FileName));
 
             await _repository.AddAsync(conversion, ct);
             await _repository.SaveChangesAsync(ct);
@@ -124,7 +124,7 @@ public class ConversionService
             try
             {
                 var markdown = await _fileStorageService.ReadMarkdownAsync(conversion.MarkdownFilePath, ct);
-                var chunks = MarkdownChunker.Create(conversion.Id, markdown);
+                var chunks = MarkdownChunker.Create(conversion.Id, markdown, conversion.FileName);
                 await _repository.AddChunksAsync(chunks, ct);
             }
             catch (FileNotFoundException)
@@ -133,6 +133,7 @@ public class ConversionService
             }
         }
 
+        await _repository.BackfillSearchIndexesAsync(ct);
         await _repository.SaveChangesAsync(ct);
     }
 

@@ -7,5 +7,6 @@ public class DocumentChunk
     public int Ordinal { get; set; }
     public string Section { get; set; } = "Contenido";
     public string Content { get; set; } = string.Empty;
+    public string SearchIndex { get; set; } = " ";
     public Conversion Conversion { get; set; } = null!;
 }

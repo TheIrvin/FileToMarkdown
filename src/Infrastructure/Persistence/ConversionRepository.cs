@@ -2,7 +2,8 @@ using MarkItDownWeb.Application.DTOs;
 using MarkItDownWeb.Application.Interfaces;
 using MarkItDownWeb.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Text.RegularExpressions;
+using MarkItDownWeb.Application.Services;
+using Microsoft.Data.Sqlite;
 
 namespace MarkItDownWeb.Infrastructure.Persistence;
 
@@ -40,57 +41,52 @@ public class ConversionRepository : IConversionRepository
     public Task AddChunksAsync(IReadOnlyCollection<DocumentChunk> chunks, CancellationToken ct = default)
         => _context.DocumentChunks.AddRangeAsync(chunks, ct);
 
+    public async Task BackfillSearchIndexesAsync(CancellationToken ct = default)
+    {
+        var chunks = await _context.DocumentChunks
+            .Include(chunk => chunk.Conversion)
+            .Where(chunk => chunk.SearchIndex == " ")
+            .ToListAsync(ct);
+
+        foreach (var chunk in chunks)
+            chunk.SearchIndex = SearchTextNormalizer.CreateIndex(chunk.Conversion.FileName, chunk.Content);
+    }
+
     public async Task<List<LibrarySearchHit>> SearchContentAsync(
         IReadOnlyCollection<string> terms,
         int limit,
         CancellationToken ct = default)
     {
-        var candidates = new Dictionary<(Guid ConversionId, string Section, string Content), LibrarySearchHit>();
-        foreach (var term in terms)
-        {
-            var pattern = $"%{term}%";
-            var matches = await _context.DocumentChunks
-                .AsNoTracking()
-                .Where(chunk => chunk.Conversion.Status == ConversionStatus.Completed
-                    && (EF.Functions.Like(chunk.Content, pattern)
-                        || EF.Functions.Like(chunk.Conversion.FileName, pattern)))
-                .OrderByDescending(chunk => chunk.Conversion.CreatedAt)
-                .ThenBy(chunk => chunk.Ordinal)
-                .Select(chunk => new LibrarySearchHit
-                {
-                    ConversionId = chunk.ConversionId,
-                    FileName = chunk.Conversion.FileName,
-                    Section = chunk.Section,
-                    Content = chunk.Content
-                })
-                .Take(limit * 4)
-                .ToListAsync(ct);
+        if (terms.Count == 0 || limit <= 0)
+            return [];
 
-            foreach (var hit in matches)
-            {
-                candidates.TryAdd((hit.ConversionId, hit.Section, hit.Content), hit);
-            }
-        }
+        var matchTerms = terms
+            .Select((_, index) => $"instr(chunk.\"SearchIndex\", $term{index}) > 0")
+            .ToArray();
+        var score = string.Join(" + ", matchTerms.Select(condition => $"CASE WHEN {condition} THEN 1 ELSE 0 END"));
+        var where = string.Join(" OR ", matchTerms);
+        var sql = $"""
+            SELECT
+                chunk."ConversionId" AS "ConversionId",
+                conversion."FileName" AS "FileName",
+                chunk."Section" AS "Section",
+                chunk."Content" AS "Content",
+                ({score}) AS "MatchCount"
+            FROM "DocumentChunks" AS chunk
+            INNER JOIN "Conversions" AS conversion ON conversion."Id" = chunk."ConversionId"
+            WHERE conversion."Status" = 'Completed' AND ({where})
+            ORDER BY "MatchCount" DESC, conversion."FileName" COLLATE NOCASE ASC, conversion."CreatedAt" DESC, chunk."Ordinal" ASC
+            LIMIT $limit;
+            """;
+        var parameters = terms
+            .Select((term, index) => (object)new SqliteParameter($"$term{index}", $" {term} "))
+            .Append(new SqliteParameter("$limit", limit))
+            .ToArray();
 
-        return candidates.Values
-            .Select(hit => new LibrarySearchHit
-            {
-                ConversionId = hit.ConversionId,
-                FileName = hit.FileName,
-                Section = hit.Section,
-                Content = hit.Content,
-                MatchCount = terms.Count(term => HasWholeTerm(hit.Content, term)
-                    || HasWholeTerm(hit.FileName, term))
-            })
-            .Where(hit => hit.MatchCount > 0)
-            .OrderByDescending(hit => hit.MatchCount)
-            .ThenBy(hit => hit.FileName, StringComparer.OrdinalIgnoreCase)
-            .Take(limit)
-            .ToList();
+        return await _context.Database
+            .SqlQueryRaw<LibrarySearchHit>(sql, parameters)
+            .ToListAsync(ct);
     }
-
-    private static bool HasWholeTerm(string text, string term)
-        => Regex.IsMatch(text, $@"(?<![\p{{L}}\p{{N}}]){Regex.Escape(term)}(?![\p{{L}}\p{{N}}])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
