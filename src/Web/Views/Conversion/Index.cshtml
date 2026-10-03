@@ -1,74 +1,128 @@
 @model MarkItDownWeb.Web.Models.ConversionViewModel
 @{
-    ViewData["Title"] = "Biblioteca local - MarkItDown";
+    ViewData["Title"] = "Biblioteca local";
 }
 
-<main class="library-shell">
-    <header class="library-heading">
-        <div>
-            <p class="eyebrow mb-2">FILETOMARKDOWN · BIBLIOTECA LOCAL</p>
-            <h1 id="pageTitle">Convierte documentos a Markdown</h1>
-            <p id="pageDescription" class="text-muted mb-0">Convierte tus archivos y guarda los resultados localmente en este equipo.</p>
+<main class="app-main">
+    <section class="hero-header" aria-labelledby="pageTitle">
+        <div class="hero-copy">
+            <p class="eyebrow hero-kicker"><span class="eyebrow-dot" aria-hidden="true"></span> DOCUMENTOS, BAJO TU CONTROL</p>
+            <h1 id="pageTitle">Convierte y consulta<br /><span>sin salir de tu equipo.</span></h1>
+            <p id="pageDescription" class="hero-description">Pasa tus archivos a Markdown, encuentra lo importante y vuelve a la fuente cuando lo necesites.</p>
         </div>
-        <span class="local-badge"><span aria-hidden="true">●</span> Solo en este equipo</span>
-    </header>
+        <div class="hero-note">
+            <span class="hero-note-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M12 21s7-3.8 7-10V5l-7-3-7 3v6c0 6.2 7 10 7 10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                    <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </span>
+            <span><strong>Privado por diseño</strong><small>Los documentos se procesan aquí.</small></span>
+        </div>
+    </section>
+
+    <section class="workflow-cards" aria-label="Qué puedes hacer">
+        <article class="workflow-card workflow-convert">
+            <span class="workflow-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M7 3.75h7l5 5v11.5H7a2 2 0 0 1-2-2V5.75a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /><path d="M14 4v5h5M8.5 14h7M8.5 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+            </span>
+            <div><span class="workflow-step">01 · CONVIERTE</span><h2>De archivo a Markdown</h2><p>Convierte formatos comunes con un solo paso.</p></div>
+        </article>
+        <article class="workflow-card workflow-library">
+            <span class="workflow-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5 12 3l8 3.5v11L12 21l-8-3.5v-11Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /><path d="m4.5 6.75 7.5 3.5 7.5-3.5M12 10.5v10" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /></svg>
+            </span>
+            <div><span class="workflow-step">02 · ORGANIZA</span><h2>Una biblioteca privada</h2><p>Busca por nombre o dentro del contenido.</p></div>
+        </article>
+        <article class="workflow-card workflow-ask">
+            <span class="workflow-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.75A2.75 2.75 0 0 1 6.75 3h10.5A2.75 2.75 0 0 1 20 5.75v7.5A2.75 2.75 0 0 1 17.25 16H10l-5 4v-4.35A2.75 2.75 0 0 1 4 13.25v-7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /><path d="M8 8h8M8 11.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+            </span>
+            <div><span class="workflow-step">03 · CONSULTA</span><h2>Respuestas con origen</h2><p>Revisa cada fragmento y su referencia.</p></div>
+        </article>
+    </section>
 
     <section id="libraryToolbar" class="library-toolbar" aria-label="Buscar o importar" hidden>
         <div class="global-search">
             <label class="visually-hidden" for="librarySearch">Buscar documentos y contenido</label>
-            <span class="search-glyph" aria-hidden="true">⌕</span>
-            <input type="search" id="librarySearch" class="form-control" placeholder="Buscar documentos y contenido..." />
+            <svg class="search-glyph" aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" stroke-width="1.7" /><path d="m15.5 15.5 4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
+            <input type="search" id="librarySearch" class="form-control" placeholder="Buscar archivos o palabras clave" />
         </div>
         <input type="file" id="fileInput" hidden accept=".pdf,.docx,.pptx,.xlsx,.html,.csv" multiple aria-label="Seleccionar documentos para convertir" />
-        <button id="btnImport" class="btn btn-primary px-4">＋ Importar documentos</button>
+        <button id="btnImport" class="btn btn-primary import-button">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 13V3m0 0L6.5 6.5M10 3l3.5 3.5M4 12.5v3A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5v-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            Importar archivos
+        </button>
     </section>
-    <p id="supportedFormats" class="form-text import-hint" hidden>PDF, Word, PowerPoint, Excel, HTML o CSV · hasta 10 archivos de 100 MiB cada uno</p>
+    <p id="supportedFormats" class="form-text import-hint" hidden>PDF, Word, PowerPoint, Excel, HTML o CSV <span aria-hidden="true">·</span> hasta 10 archivos de 100 MiB cada uno</p>
 
-    <section id="firstRunPanel" class="first-run-panel" aria-labelledby="firstRunTitle">
-        <span class="first-run-icon" aria-hidden="true">⇧</span>
-        <h2 id="firstRunTitle">Empieza con un documento</h2>
-        <p>Suelta aquí hasta 10 archivos para convertirlos a Markdown y consultarlos desde este equipo.</p>
-        <button id="btnFirstRunImport" class="btn btn-primary px-4">Elegir documentos</button>
-        <p id="firstRunStatus" class="first-run-status mb-0" role="status" aria-live="polite" tabindex="-1" hidden></p>
-        <p class="first-run-hint mb-0">PDF, Word, PowerPoint, Excel, HTML o CSV · hasta 100 MiB por archivo</p>
+    <section id="firstRunPanel" class="dropzone-panel first-run-panel" aria-labelledby="firstRunTitle">
+        <div class="dropzone-copy">
+            <p class="dropzone-kicker"><span aria-hidden="true">01</span> EMPIEZA CON TUS ARCHIVOS</p>
+            <h2 id="firstRunTitle">Arrastra tus documentos<br /><span>y conviértelos aquí.</span></h2>
+            <p class="dropzone-description">Suéltalos en esta área o selecciónalos desde tu equipo. Puedes importar hasta 10 archivos a la vez.</p>
+            <button id="btnFirstRunImport" class="btn btn-primary dropzone-button">
+                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 13V3m0 0L6.5 6.5M10 3l3.5 3.5M4 12.5v3A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5v-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                Seleccionar documentos
+            </button>
+            <p id="firstRunStatus" class="first-run-status mb-0" role="status" aria-live="polite" tabindex="-1" hidden></p>
+            <div class="format-list" aria-label="Formatos admitidos">
+                <span>PDF</span><span>DOCX</span><span>PPTX</span><span>XLSX</span><span>HTML</span><span>CSV</span>
+            </div>
+            <p class="dropzone-limit">Máximo 100 MiB por archivo</p>
+        </div>
+        <div class="dropzone-art" aria-hidden="true">
+            <div class="paper-orbit orbit-one"></div>
+            <div class="paper-orbit orbit-two"></div>
+            <div class="paper-sheet sheet-back"><span></span><span></span><span></span><b>DOCX</b></div>
+            <div class="paper-sheet sheet-front"><span></span><span></span><span></span><b>PDF</b></div>
+            <div class="conversion-stamp">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </div>
+            <div class="markdown-tile"><span class="markdown-mark">M↓</span><span>markdown</span><b>.md</b></div>
+            <span class="art-spark spark-one">✳</span><span class="art-spark spark-two">✦</span>
+        </div>
+        <div class="dropzone-footer">
+            <span><svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 17s6-3.2 6-8.6V4.8L10 2 4 4.8v3.6c0 5.4 6 8.6 6 8.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" /><path d="m7.5 9.5 1.7 1.7 3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg> Tus documentos permanecen en este dispositivo</span>
+            <span>Arrastrar y soltar está listo</span>
+        </div>
     </section>
 
     <div id="importProgress" class="import-progress import-progress-global" hidden>
-        <p class="eyebrow mb-2">IMPORTACIÓN</p>
+        <div class="progress-heading"><span class="progress-pulse" aria-hidden="true"></span><p class="eyebrow mb-0">ESTADO DE IMPORTACIÓN</p></div>
         <ul id="importResults" class="import-results mb-0" aria-live="polite"></ul>
     </div>
 
-    <div id="workspaceLayout" class="row g-4 library-layout" hidden>
-        <section class="col-lg-7" aria-label="Documentos de la biblioteca">
+    <div id="workspaceLayout" class="library-layout" hidden>
+        <section class="library-column" aria-label="Documentos de la biblioteca">
             <div class="card app-card library-card">
                 <div class="card-heading">
                     <div>
-                        <p class="eyebrow mb-1">TUS ARCHIVOS</p>
-                        <h2 class="h5 mb-0">Biblioteca <span id="documentCount" class="count-pill">0</span></h2>
+                        <p class="eyebrow mb-1">TU ESPACIO LOCAL</p>
+                        <h2 class="panel-title">Biblioteca <span id="documentCount" class="count-pill">0</span></h2>
                     </div>
-                    <span id="statusText" class="status-text text-muted" role="status" aria-live="polite" tabindex="-1"></span>
+                    <span id="statusText" class="status-text" role="status" aria-live="polite" tabindex="-1"></span>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table document-table mb-0">
                         <thead id="documentTableHead">
-                            <tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Añadido</th><th scope="col">Estado</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr>
+                            <tr><th scope="col">Documento</th><th scope="col">Formato</th><th scope="col">Añadido</th><th scope="col">Estado</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr>
                         </thead>
                         <tbody id="historyList"></tbody>
                     </table>
                 </div>
                 <div id="historyEmpty" class="empty-state">
-                    <span class="empty-icon" aria-hidden="true">▤</span>
+                    <span class="empty-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 3.75h7l4 4v12.5h-11a2 2 0 0 1-2-2V5.75a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /><path d="M13.5 4v4h4M8 13h8M8 16.5h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+                    </span>
                     <h3 id="historyEmptyTitle">Tu biblioteca está vacía</h3>
                     <p id="historyEmptyText">Importa un documento para convertirlo, buscar su contenido y consultarlo aquí.</p>
                 </div>
 
                 <div id="libraryResultsPanel" class="search-results-panel" hidden>
-                    <div class="card-heading">
-                        <div>
-                            <p class="eyebrow mb-1">COINCIDENCIAS</p>
-                            <h3 class="h6 mb-0">Fragmentos encontrados</h3>
-                        </div>
+                    <div class="card-heading results-heading">
+                        <div><p class="eyebrow mb-1">BÚSQUEDA EN CONTENIDO</p><h3 class="panel-subtitle">Fragmentos relacionados</h3></div>
                     </div>
                     <ul id="libraryResults" class="list-group list-group-flush library-results"></ul>
                     <p id="librarySearchEmpty" class="text-muted small mb-0" hidden></p>
@@ -76,12 +130,12 @@
             </div>
         </section>
 
-        <aside class="col-lg-5 detail-column" aria-label="Detalle y consulta">
+        <aside class="detail-column" aria-label="Vista previa y consulta">
             <section class="card app-card detail-card">
                 <div class="card-heading">
                     <div class="min-w-0">
                         <p class="eyebrow mb-1">VISTA PREVIA</p>
-                        <h2 id="resultHeading" class="h5 mb-0 text-truncate" tabindex="-1">Selecciona un documento</h2>
+                        <h2 id="resultHeading" class="panel-title text-truncate" tabindex="-1">Selecciona un documento</h2>
                     </div>
                     <div class="detail-actions">
                         <button id="btnCopy" class="btn btn-sm btn-outline-secondary" disabled>Copiar</button>
@@ -90,23 +144,27 @@
                     </div>
                 </div>
                 <div id="detailEmpty" class="detail-empty">
+                    <span class="preview-empty-icon" aria-hidden="true">M↓</span>
                     <p class="mb-0">El Markdown del documento seleccionado aparecerá aquí.</p>
                 </div>
                 <pre id="markdownOutput" class="markdown-output" aria-label="Contenido Markdown" tabindex="0" hidden></pre>
             </section>
 
             <section class="card app-card ask-card">
-                <div class="mb-3">
-                    <p class="eyebrow mb-1">CONSULTA EXTRACTIVA</p>
-                    <h2 class="h5 mb-0">Pregunta a la biblioteca</h2>
-                    <p class="small text-muted mt-1 mb-0">Las respuestas incluyen fragmentos y referencias al origen.</p>
+                <div class="ask-intro">
+                    <span class="ask-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.75A2.75 2.75 0 0 1 6.75 3h10.5A2.75 2.75 0 0 1 20 5.75v7.5A2.75 2.75 0 0 1 17.25 16H10l-5 4v-4.35A2.75 2.75 0 0 1 4 13.25v-7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /><path d="M8 8h8M8 11.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+                    </span>
+                    <div><p class="eyebrow mb-1">CONSULTA LOCAL</p><h2 class="panel-title">Pregunta a tus archivos</h2></div>
                 </div>
+                <p class="ask-description">Respuestas breves, con fragmentos y referencias para volver al documento original.</p>
                 <form id="askForm" class="ask-form">
                     <label class="visually-hidden" for="questionInput">Pregunta sobre tus documentos</label>
                     <input type="search" id="questionInput" class="form-control" maxlength="300" placeholder="¿Qué dicen mis archivos sobre...?" required />
-                    <button id="btnAsk" class="btn btn-primary">Consultar</button>
+                    <button id="btnAsk" class="btn btn-primary">Consultar <span aria-hidden="true">→</span></button>
                 </form>
-                <div id="answerPanel" class="answer-panel mt-3" aria-live="polite" hidden></div>
+                <div id="answerPanel" class="answer-panel" aria-live="polite" hidden></div>
+                <p class="ask-footnote mb-0"><span aria-hidden="true">✳</span> Solo responde con evidencia encontrada en tu biblioteca.</p>
             </section>
         </aside>
     </div>
