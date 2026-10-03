@@ -12,6 +12,7 @@ public class Conversion
     public double? ConversionTimeSeconds { get; set; }
     public ConversionStatus Status { get; set; } = ConversionStatus.Pending;
     public string? ErrorMessage { get; set; }
+    public List<DocumentChunk> Chunks { get; set; } = [];
 
     public void MarkAsCompleted(string markdownFilePath, double elapsedSeconds)
     {

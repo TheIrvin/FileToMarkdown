@@ -50,6 +50,7 @@ public class ConversionService
 
             var markdownPath = await _fileStorageService.SaveMarkdownAsync(conversion.Id, markdown, ct);
             conversion.MarkAsCompleted(markdownPath, stopwatch.Elapsed.TotalSeconds);
+            conversion.Chunks.AddRange(MarkdownChunker.Create(conversion.Id, markdown, conversion.FileName));
 
             await _repository.AddAsync(conversion, ct);
             await _repository.SaveChangesAsync(ct);
@@ -112,7 +113,42 @@ public class ConversionService
                 Status = c.Status.ToString()
             }).ToList(), ct);
 
-    public Task DeleteAsync(Guid id, CancellationToken ct = default) => _repository.DeleteAsync(id, ct);
+    public async Task IndexExistingAsync(CancellationToken ct = default)
+    {
+        var conversions = await _repository.GetCompletedWithoutIndexAsync(ct);
+        foreach (var conversion in conversions)
+        {
+            if (string.IsNullOrWhiteSpace(conversion.MarkdownFilePath))
+                continue;
+
+            try
+            {
+                var markdown = await _fileStorageService.ReadMarkdownAsync(conversion.MarkdownFilePath, ct);
+                var chunks = MarkdownChunker.Create(conversion.Id, markdown, conversion.FileName);
+                await _repository.AddChunksAsync(chunks, ct);
+            }
+            catch (FileNotFoundException)
+            {
+                // A missing Markdown file must not stop the local app from starting.
+            }
+        }
+
+        await _repository.BackfillSearchIndexesAsync(ct);
+        await _repository.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var conversion = await _repository.GetByIdAsync(id, ct);
+        if (conversion is null)
+            return;
+
+        await _repository.DeleteAsync(id, ct);
+        await _repository.SaveChangesAsync(ct);
+
+        if (!string.IsNullOrWhiteSpace(conversion.MarkdownFilePath))
+            _fileStorageService.DeleteMarkdown(conversion.MarkdownFilePath);
+    }
 
     private static void ValidateFile(string fileName, long fileSize)
     {
