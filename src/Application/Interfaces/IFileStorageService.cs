@@ -6,4 +6,5 @@ public interface IFileStorageService
     Task<string> SaveMarkdownAsync(Guid conversionId, string markdown, CancellationToken ct = default);
     Task<string> ReadMarkdownAsync(string markdownFilePath, CancellationToken ct = default);
     void DeleteTemporary(string filePath);
+    void DeleteMarkdown(string filePath);
 }

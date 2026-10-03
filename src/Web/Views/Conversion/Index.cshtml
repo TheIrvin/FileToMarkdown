@@ -1,59 +1,108 @@
 @model MarkItDownWeb.Web.Models.ConversionViewModel
 @{
-    ViewData["Title"] = "Convertir archivos a Markdown";
+    ViewData["Title"] = "Biblioteca local - MarkItDown";
 }
 
-<div class="conversion-shell">
-    <header class="page-heading mb-4">
-        <p class="eyebrow mb-2">CONVERSIÓN LOCAL</p>
-        <h1>Convierte tus documentos a Markdown</h1>
-        <p class="text-muted mb-0">Sube un archivo, revisa el resultado y descarga tu <code>.md</code>.</p>
+<main class="library-shell">
+    <header class="library-heading">
+        <div>
+            <p class="eyebrow mb-2">FILETOMARKDOWN · BIBLIOTECA LOCAL</p>
+            <h1>Consulta tus documentos</h1>
+            <p class="text-muted mb-0">Busca contenido y vuelve a tus archivos desde un espacio privado en este equipo.</p>
+        </div>
+        <span class="local-badge"><span aria-hidden="true">●</span> Solo en este equipo</span>
     </header>
 
-    <div class="row g-4">
-        <section class="col-lg-8" aria-label="Conversor">
-            <div class="card app-card p-4 mb-4">
-                <label for="fileInput" class="form-label fw-semibold">Documento</label>
-                <input type="file" id="fileInput" class="form-control"
-                       accept=".pdf,.docx,.pptx,.xlsx,.html,.csv"
-                       aria-describedby="supportedFormats statusText" />
-                <div id="supportedFormats" class="form-text">PDF, Word, PowerPoint, Excel, HTML o CSV · máximo 100 MB</div>
-                <div class="d-flex align-items-center gap-3 mt-3">
-                    <button id="btnConvert" class="btn btn-primary px-4">Convertir a Markdown</button>
+    <section class="library-toolbar" aria-label="Buscar o importar">
+        <div class="global-search">
+            <label class="visually-hidden" for="librarySearch">Buscar documentos y contenido</label>
+            <span class="search-glyph" aria-hidden="true">⌕</span>
+            <input type="search" id="librarySearch" class="form-control" placeholder="Buscar documentos y contenido..." />
+        </div>
+        <input type="file" id="fileInput" hidden accept=".pdf,.docx,.pptx,.xlsx,.html,.csv" multiple />
+        <button id="btnImport" class="btn btn-primary px-4">＋ Importar documentos</button>
+    </section>
+    <p id="supportedFormats" class="form-text import-hint">PDF, Word, PowerPoint, Excel, HTML o CSV · hasta 10 archivos de 100 MiB cada uno</p>
+
+    <div class="row g-4 library-layout">
+        <section class="col-lg-7" aria-label="Documentos de la biblioteca">
+            <div class="card app-card library-card">
+                <div class="card-heading">
+                    <div>
+                        <p class="eyebrow mb-1">TUS ARCHIVOS</p>
+                        <h2 class="h5 mb-0">Biblioteca <span id="documentCount" class="count-pill">0</span></h2>
+                    </div>
                     <span id="statusText" class="status-text text-muted" role="status" aria-live="polite"></span>
                 </div>
-            </div>
 
-            <div class="card app-card p-4">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                    <div>
-                        <p class="eyebrow mb-1">RESULTADO</p>
-                        <h2 id="resultHeading" class="h5 mb-0">Markdown generado</h2>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button id="btnCopy" class="btn btn-sm btn-outline-secondary" disabled>Copiar</button>
-                        <button id="btnDownload" class="btn btn-sm btn-outline-primary" disabled>Descargar .md</button>
-                        <button id="btnClear" class="btn btn-sm btn-outline-secondary">Limpiar</button>
-                    </div>
+                <div id="importProgress" class="import-progress" hidden>
+                    <p class="eyebrow mb-2">IMPORTACIÓN</p>
+                    <ul id="importResults" class="import-results mb-0" aria-live="polite"></ul>
                 </div>
-                <pre id="markdownOutput" class="markdown-output" aria-label="Contenido Markdown" tabindex="0"></pre>
+
+                <div class="table-responsive">
+                    <table class="table document-table mb-0">
+                        <thead id="documentTableHead">
+                            <tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Añadido</th><th scope="col">Estado</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr>
+                        </thead>
+                        <tbody id="historyList"></tbody>
+                    </table>
+                </div>
+                <div id="historyEmpty" class="empty-state">
+                    <span class="empty-icon" aria-hidden="true">▤</span>
+                    <h3 id="historyEmptyTitle">Tu biblioteca está vacía</h3>
+                    <p id="historyEmptyText">Importa un documento para convertirlo, buscar su contenido y consultarlo aquí.</p>
+                    <button id="btnEmptyImport" class="btn btn-sm btn-outline-primary">Importar documentos</button>
+                </div>
+
+                <div id="libraryResultsPanel" class="search-results-panel" hidden>
+                    <div class="card-heading">
+                        <div>
+                            <p class="eyebrow mb-1">COINCIDENCIAS</p>
+                            <h3 class="h6 mb-0">Fragmentos encontrados</h3>
+                        </div>
+                    </div>
+                    <ul id="libraryResults" class="list-group list-group-flush library-results"></ul>
+                    <p id="librarySearchEmpty" class="text-muted small mb-0" hidden></p>
+                </div>
             </div>
         </section>
 
-        <aside class="col-lg-4" aria-label="Historial de conversiones">
-            <div class="card app-card p-4">
-                <div class="mb-3">
-                    <p class="eyebrow mb-1">EN ESTE DISPOSITIVO</p>
-                    <h2 class="h5 mb-0">Historial</h2>
+        <aside class="col-lg-5 detail-column" aria-label="Detalle y consulta">
+            <section class="card app-card detail-card">
+                <div class="card-heading">
+                    <div class="min-w-0">
+                        <p class="eyebrow mb-1">VISTA PREVIA</p>
+                        <h2 id="resultHeading" class="h5 mb-0 text-truncate">Selecciona un documento</h2>
+                    </div>
+                    <div class="detail-actions">
+                        <button id="btnCopy" class="btn btn-sm btn-outline-secondary" disabled>Copiar</button>
+                        <button id="btnDownload" class="btn btn-sm btn-outline-secondary" disabled>Descargar</button>
+                        <button id="btnDeleteCurrent" class="btn btn-sm btn-outline-danger" disabled>Borrar</button>
+                    </div>
                 </div>
-                <label class="visually-hidden" for="searchHistory">Buscar en el historial</label>
-                <input type="search" id="searchHistory" class="form-control mb-3" placeholder="Buscar archivo..." />
-                <ul id="historyList" class="list-group list-group-flush history-list"></ul>
-                <p id="historyEmpty" class="text-muted small mt-3 mb-0" hidden>Aún no hay conversiones guardadas.</p>
-            </div>
+                <div id="detailEmpty" class="detail-empty">
+                    <p class="mb-0">El Markdown del documento seleccionado aparecerá aquí.</p>
+                </div>
+                <pre id="markdownOutput" class="markdown-output" aria-label="Contenido Markdown" tabindex="0" hidden></pre>
+            </section>
+
+            <section class="card app-card ask-card">
+                <div class="mb-3">
+                    <p class="eyebrow mb-1">CONSULTA EXTRACTIVA</p>
+                    <h2 class="h5 mb-0">Pregunta a la biblioteca</h2>
+                    <p class="small text-muted mt-1 mb-0">Las respuestas incluyen fragmentos y referencias al origen.</p>
+                </div>
+                <form id="askForm" class="ask-form">
+                    <label class="visually-hidden" for="questionInput">Pregunta sobre tus documentos</label>
+                    <input type="search" id="questionInput" class="form-control" maxlength="300" placeholder="¿Qué dicen mis archivos sobre...?" required />
+                    <button id="btnAsk" class="btn btn-primary">Consultar</button>
+                </form>
+                <div id="answerPanel" class="answer-panel mt-3" aria-live="polite" hidden></div>
+            </section>
         </aside>
     </div>
-</div>
+</main>
 
 @section Scripts {
     <script src="~/js/conversion.js" asp-append-version="true"></script>

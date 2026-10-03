@@ -42,4 +42,10 @@ public class FileStorageService : IFileStorageService
         if (File.Exists(filePath))
             File.Delete(filePath);
     }
+
+    public void DeleteMarkdown(string filePath)
+    {
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+    }
 }

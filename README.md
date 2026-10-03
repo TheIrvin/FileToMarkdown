@@ -1,94 +1,91 @@
 # FileToMarkdown
 
-Aplicación web local para convertir documentos a Markdown. Selecciona un archivo, revisa el resultado en el navegador y descarga un `.md` con el nombre del documento original.
+Biblioteca local para convertir documentos a Markdown, buscar su contenido y consultar fragmentos con referencias a su archivo y sección de origen.
 
-## Captura
+**Escritorio**
 
-![Conversión de un documento y su vista previa Markdown con historial local](docs/screenshots/local-conversion-flow.png)
+![Biblioteca local en escritorio](docs/screenshots/local-document-library.png)
+
+**Móvil**
+
+![Biblioteca local en móvil](docs/screenshots/local-document-library-mobile.png)
 
 ## Funciones
 
-- Interfaz web responsive con vista previa, copia y descarga del Markdown.
-- Historial local de conversiones con búsqueda y reapertura de resultados.
-- Conversión de PDF, DOCX, PPTX, XLSX, HTML y CSV mediante [Microsoft MarkItDown](https://github.com/microsoft/markitdown).
-- Base de datos SQLite y archivos de resultado guardados en el equipo.
-- Validación de extensión, tamaño máximo de 100 MiB y firma de archivos PDF/Office.
+- Importa hasta 10 archivos por lote; cada archivo puede ocupar hasta 100 MiB. El estado de conversión se muestra por archivo y un error no detiene los demás.
+- Convierte PDF, DOCX, PPTX, XLSX, HTML y CSV con [Microsoft MarkItDown](https://github.com/microsoft/markitdown).
+- Previsualiza, copia y descarga Markdown. El historial local permite reabrir o borrar conversiones.
+- Indexa el Markdown en fragmentos de hasta 1.200 caracteres y busca nombres de archivo y contenido en SQLite.
+- Consulta la biblioteca con respuestas extractivas: muestra el fragmento coincidente y cita el archivo y la sección. Si no encuentra evidencia, lo indica explícitamente.
 
-La aplicación se ejecuta en tu equipo. Los archivos se envían al proceso web local y a MarkItDown; esta configuración no proporciona autenticación, así que mantenla accesible solo desde tu propio equipo y no la expongas a una red pública.
+La búsqueda y las consultas son locales y no necesitan claves ni conexión a un proveedor de IA. `IAnswerGenerator` permite añadir otro generador, pero esta versión solo registra el generador extractivo local y no envía documentos fuera del equipo.
 
 ## Requisitos
 
 - [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0)
-- Python y `pip`
+- Python y `pip` para Microsoft MarkItDown
 
-## Ejecutar en local
+## Instalación y ejecución
 
-Desde la raíz del repositorio:
+Desde la raíz del repositorio, crea un entorno e instala MarkItDown con sus dependencias opcionales:
 
-```bash
+```powershell
 python -m venv .venv
-```
-
-Activa el entorno virtual y luego instala MarkItDown:
-
-```bash
-# Windows PowerShell
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install 'markitdown[all]'
 ```
 
-```bash
-# Linux / macOS
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install 'markitdown[all]'
-```
+Inicia la aplicación:
 
-Inicia la interfaz:
-
-```bash
+```powershell
 dotnet run --project src/Web/MarkItDownWeb.Web.csproj --launch-profile http
 ```
 
-Abre [http://localhost:5241](http://localhost:5241). La ruta del ejecutable de Python se puede configurar con `MarkItDown__PythonPath`; por defecto se usa `python` del entorno activo. Por ejemplo, en PowerShell:
+Abre [http://localhost:5241](http://localhost:5241). Si Python no está en `PATH`, establece `MarkItDown__PythonPath` con la ruta completa al ejecutable antes de iniciar la app:
 
 ```powershell
 $env:MarkItDown__PythonPath = (Get-Command python).Source
 dotnet run --project src/Web/MarkItDownWeb.Web.csproj --launch-profile http
 ```
 
-## Comprobar cambios
-
-```bash
-dotnet test MarkItDownWeb.slnx --configuration Release
-```
-
-GitHub Actions ejecuta la misma comprobación al abrir o actualizar un pull request y al hacer push a `master`.
-
 ## Uso
 
-1. Elige un PDF, DOCX, PPTX, XLSX, HTML o CSV de hasta 100 MiB.
-2. Pulsa **Convertir a Markdown** y revisa el contenido generado.
-3. Cópialo o descárgalo como `<nombre-del-documento>.md`.
-4. Abre una conversión anterior desde el historial. Los datos permanecen en el equipo.
+1. Pulsa **Importar documentos** y selecciona archivos permitidos. Se procesan de uno en uno; el estado o error aparece junto al nombre del archivo.
+2. Busca por nombre o contenido desde la barra superior. La lista central muestra tipo, fecha y estado.
+3. Selecciona un documento para abrir su Markdown en el panel de detalle. Desde ahí puedes copiar, descargar o borrar.
+4. Usa **Pregunta a la biblioteca** para consultar fragmentos relacionados con sus citas. Sin coincidencias, la app informa que no encontró respaldo. En móvil, el detalle queda debajo de la lista.
 
-## Datos locales
+## Almacenamiento y privacidad
 
-La base de datos SQLite se crea automáticamente. Los archivos temporales se eliminan al terminar la conversión; el historial conserva los resultados Markdown y los metadatos. Las carpetas se pueden cambiar desde `src/Web/appsettings.json` (`Storage:UploadsFolder`, `Storage:MarkdownFolder` y `ConnectionStrings:DefaultConnection`). No se conserva el documento original después de convertirlo.
+SQLite conserva los metadatos y los fragmentos indexados. Los resultados Markdown se guardan localmente en `Storage/Markdown`; el documento original solo existe en un archivo temporal durante la conversión y se elimina al terminar. Al borrar una conversión también se borran sus fragmentos por clave foránea y su archivo Markdown. Al iniciar, la app indexa conversiones existentes que todavía no tengan fragmentos.
 
-## Estructura
+Las rutas se configuran en `src/Web/appsettings.json` (`ConnectionStrings:DefaultConnection`, `Storage:UploadsFolder` y `Storage:MarkdownFolder`). La aplicación no incluye autenticación; mantenla accesible solo desde tu equipo y no la expongas a una red pública.
+
+## Arquitectura
 
 ```text
 src/
-  Domain/          Entidades y tipos de conversión
-  Application/     Flujo de conversión e interfaces
-  Infrastructure/  MarkItDown, almacenamiento y SQLite
-  Web/             Interfaz ASP.NET Core MVC
+  Domain/          Conversiones y fragmentos indexados
+  Application/     Conversión, división Markdown, búsqueda y respuesta extractiva
+  Infrastructure/  MarkItDown, almacenamiento local y persistencia SQLite
+  Web/             Interfaz y endpoints ASP.NET Core MVC
+tests/             Pruebas de conversión, búsqueda, citas, validación y borrado
 ```
 
-## Limitaciones conocidas
+La tabla `DocumentChunks` se crea al iniciar. Esto conserva las bases SQLite existentes sin modificar su tabla de historial; los fragmentos se eliminan en cascada al borrar una conversión.
 
-- La calidad del Markdown depende del formato y del contenido del documento original.
-- MarkItDown puede necesitar dependencias adicionales para ciertos formatos; consulta su documentación si la instalación completa no está disponible en tu plataforma.
-- Esta versión está pensada para uso local individual; no incluye cuentas, aislamiento entre usuarios ni almacenamiento en la nube.
+## Formatos y límites verificados
+
+La aplicación acepta `.pdf`, `.docx`, `.pptx`, `.xlsx`, `.html` y `.csv`, limita cada archivo a 100 MiB y rechaza extensiones no permitidas. También comprueba las firmas PDF/ZIP de PDF y documentos Office; HTML y CSV no tienen una comprobación de firma. MarkItDown y sus dependencias instaladas determinan qué contenido puede extraerse de cada archivo.
+
+Las pruebas del repositorio verifican validación, indexación, búsqueda, citas, abstención y eliminación con un conversor simulado. CI no incluye documentos de muestra para comprobar cada formato de extremo a extremo. La extracción depende de MarkItDown; los PDF no reciben número de página de forma uniforme. La app cita los marcadores de página que existan en el Markdown y, en su ausencia, cita encabezados/secciones o `Contenido`. La búsqueda es léxica; no interpreta sinónimos ni genera resúmenes. No incluye OCR ni cuentas multiusuario.
+
+## Verificación
+
+```powershell
+dotnet build MarkItDownWeb.slnx --configuration Release --warnaserror
+dotnet test MarkItDownWeb.slnx --configuration Release
+```
+
+GitHub Actions ejecuta build con warnings como errores y las pruebas al abrir o actualizar un pull request y al hacer push a `master`.

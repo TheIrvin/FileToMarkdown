@@ -15,13 +15,17 @@ builder.Services.AddScoped<IConversionRepository, ConversionRepository>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<IMarkItDownService, MarkItDownService>();
 builder.Services.AddScoped<ConversionService>();
+builder.Services.AddScoped<IAnswerGenerator, LocalExtractiveAnswerGenerator>();
+builder.Services.AddScoped<LibraryService>();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    LocalLibrarySchema.EnsureCreated(db);
+    var conversionService = scope.ServiceProvider.GetRequiredService<ConversionService>();
+    await conversionService.IndexExistingAsync();
 }
 
 app.UseStaticFiles();

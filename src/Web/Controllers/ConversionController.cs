@@ -1,4 +1,5 @@
 using MarkItDownWeb.Application.Services;
+using MarkItDownWeb.Application.DTOs;
 using MarkItDownWeb.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,9 +8,13 @@ namespace MarkItDownWeb.Web.Controllers;
 public class ConversionController : Controller
 {
     private readonly ConversionService _conversionService;
+    private readonly LibraryService _libraryService;
 
-    public ConversionController(ConversionService conversionService)
-        => _conversionService = conversionService;
+    public ConversionController(ConversionService conversionService, LibraryService libraryService)
+    {
+        _conversionService = conversionService;
+        _libraryService = libraryService;
+    }
 
     [HttpGet]
     public IActionResult Index() => View(new ConversionViewModel());
@@ -55,6 +60,14 @@ public class ConversionController : Controller
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Search(string? query, CancellationToken ct)
+        => Json(await _libraryService.SearchAsync(query, ct));
+
+    [HttpPost]
+    public async Task<IActionResult> Ask([FromBody] LibraryQuestionRequest request, CancellationToken ct)
+        => Json(await _libraryService.AskAsync(request.Question, ct));
+
     [HttpPost]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
@@ -62,3 +75,5 @@ public class ConversionController : Controller
         return Ok();
     }
 }
+
+public sealed record LibraryQuestionRequest(string? Question);
